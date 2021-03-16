@@ -1,0 +1,132 @@
+name: Azure Static Web Apps CI/CD
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - production
+
+jobs:
+  build_and_deploy_job:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    name: Build and Deploy Job
+    steps:
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Create Azure static web app
+        id: create-azure-static-web-app
+        run: |
+          ASWA_DEFAULTHOSTNAME="$(az staticwebapp create --name $ASWA_NAME --resource-group $AZURE_RESOURCEGROUP --location $AZURE_LOCATION --source https://github.com/$GITHUB_REPOSITORY --branch ${GITHUB_REF##*/} --token $GTHB_PATOKEN --query defaultHostname | sed -e 's/^"//' -e 's/"$//')"
+          echo "::add-mask::$ASWA_DEFAULTHOSTNAME"
+          echo "::set-output name=ASWA_DEFAULTHOSTNAME::$ASWA_DEFAULTHOSTNAME"
+        env:
+          ASWA_NAME: ${{ secrets.ASWA_NAME }}
+          AZURE_RESOURCEGROUP: ${{ secrets.AZURE_RESOURCEGROUP }}
+          AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
+          GTHB_PATOKEN: ${{ secrets.GTHB_PATOKEN }}
+      - name: Get Azure static web app token
+        id: get-azure-static-web-app-token
+        run: |
+          AZURE_SUBSCRIPTIONID="$(echo $AZURE_CREDENTIALS | jq '.subscriptionId' | sed -e 's/^"//' -e 's/"$//')"
+          AZURE_STATIC_WEB_APPS_API_TOKEN="$(az rest --method post --url /subscriptions/$AZURE_SUBSCRIPTIONID/resourcegroups/$AZURE_RESOURCEGROUP/providers/Microsoft.Web/staticSites/$ASWA_NAME/listsecrets?api-version=2020-06-01 --query properties.apiKey | sed -e 's/^"//' -e 's/"$//')"
+          echo "::add-mask::$AZURE_SUBSCRIPTIONID"
+          echo "::add-mask::$AZURE_STATIC_WEB_APPS_API_TOKEN"
+          echo "::set-output name=AZURE_STATIC_WEB_APPS_API_TOKEN::$AZURE_STATIC_WEB_APPS_API_TOKEN"
+        env:
+          ASWA_NAME: ${{ secrets.ASWA_NAME }}
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+          AZURE_RESOURCEGROUP: ${{ secrets.AZURE_RESOURCEGROUP }}
+      - name: Create Application Insights instance
+        id: create-application-insights
+        run: |
+          az extension add -n application-insights
+          APPINSIGHTS_INSTRUMENTATIONKEY="$(az monitor app-insights component create --app $AAI_NAME --resource-group $AZURE_RESOURCEGROUP --location $AZURE_LOCATION --query instrumentationKey | sed -e 's/^"//' -e 's/"$//')"
+          echo "::add-mask::$APPINSIGHTS_INSTRUMENTATIONKEY"
+          echo "::set-output name=APPINSIGHTS_INSTRUMENTATIONKEY::$APPINSIGHTS_INSTRUMENTATIONKEY"
+        env:
+          AAI_NAME: ${{ secrets.AAI_NAME }}
+          AZURE_RESOURCEGROUP: ${{ secrets.AZURE_RESOURCEGROUP }}
+          AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
+      - uses: actions/checkout@v2
+        with:
+          submodules: true
+      - name: Build And Deploy
+        id: builddeploy
+        uses: Azure/static-web-apps-deploy@v0.0.1-preview
+        with:
+          azure_static_web_apps_api_token: ${{ steps.get-azure-static-web-app-token.outputs.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }} # Used for Github integrations (i.e. PR comments)
+          action: "upload"
+          ###### Repository/Build Configurations - These values can be configured to match you app requirements. ######
+          # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
+          app_location: "/" # App source code path
+          api_location: "api" # Api source code path - optional
+          output_location: "dist/" # Built app content directory - optional
+          ###### End of Repository/Build Configurations ######
+        env: # Add environment variables here
+          PROD_URL: ${{ secrets.PROD_URL }}
+          PROVIDERNAME: ${{ secrets.PROVIDERNAME }}
+          DISPLAYNAME: ${{ secrets.DISPLAYNAME }}
+          DISPLAYNAME_RU: ${{ secrets.DISPLAYNAME_RU }}
+          DESCRIPTION: ${{ secrets.DESCRIPTION }}
+          DESCRIPTION_RU: ${{ secrets.DESCRIPTION_RU }}
+          SUPPORTURL: ${{ secrets.SUPPORTURL }}
+          SUPPORTURL_RU: ${{ secrets.SUPPORTURL_RU }}
+          APPDOMAIN: ${{ secrets.APPDOMAIN }}
+          GROUPLABEL: ${{ secrets.GROUPLABEL }}
+          GROUPLABEL_RU: ${{ secrets.GROUPLABEL_RU }}
+          BUTTONLABEL: ${{ secrets.BUTTONLABEL }}
+          BUTTONLABEL_RU: ${{ secrets.BUTTONLABEL_RU }}
+          BUTTONTOOLTIP: ${{ secrets.BUTTONTOOLTIP }}
+          BUTTONTOOLTIP_RU: ${{ secrets.BUTTONTOOLTIP_RU }}
+          API_URL: ${{ secrets.API_URL }}
+          NOTIFICATIONICON: ${{ secrets.NOTIFICATIONICON }}
+          ENABLETRACE: ${{ secrets.ENABLETRACE }}
+          ENABLEDIAGNOSTICINFOINTRACEANDERROR: ${{ secrets.ENABLEDIAGNOSTICINFOINTRACEANDERROR }}
+          ENABLENOTIFICATIONINFORMATIONALMESSAGE: ${{ secrets.ENABLENOTIFICATIONINFORMATIONALMESSAGE }}
+          ENABLENOTIFICATIONERRORMESSAGE: ${{ secrets.ENABLENOTIFICATIONERRORMESSAGE }}
+          APPINSIGHTS_INSTRUMENTATIONKEY: ${{ steps.create-application-insights.outputs.APPINSIGHTS_INSTRUMENTATIONKEY }}
+          APPLICATIONINSIGHTSAPPROLE: ${{ secrets.APPLICATIONINSIGHTSAPPROLE }}
+          APPLICATIONINSIGHTSENABLECORSCORRELATION: ${{ secrets.APPLICATIONINSIGHTSENABLECORSCORRELATION }}
+          APPLICATIONINSIGHTSEABLEREQUESTHEADERTRACKING: ${{ secrets.APPLICATIONINSIGHTSEABLEREQUESTHEADERTRACKING }}
+          APPLICATIONINSIGHTSENABLERESPONSEHEADERTRACKING: ${{ secrets.APPLICATIONINSIGHTSENABLERESPONSEHEADERTRACKING }}
+          LOGSTASHURL: ${{ secrets.LOGSTASHURL }}
+          LOGSTASHUSERNAME: ${{ secrets.LOGSTASHUSERNAME }}
+          LOGSTASHPASSWORD: ${{ secrets.LOGSTASHPASSWORD }}
+      - name: Set Azure static web app settings
+        run: |
+          az staticwebapp appsettings set --name $ASWA_NAME --setting-names APPINSIGHTS_INSTRUMENTATIONKEY=$APPINSIGHTS_INSTRUMENTATIONKEY LOG_PROCESSING_URL=http://$ACI_DOMAINNAME.$AZURE_LOCATION.azurecontainer.io:5050/ --output none
+        env:
+          ASWA_NAME: ${{ secrets.ASWA_NAME }}
+          APPINSIGHTS_INSTRUMENTATIONKEY: ${{ steps.create-application-insights.outputs.APPINSIGHTS_INSTRUMENTATIONKEY }}
+          ACI_DOMAINNAME: ${{ secrets.ACI_DOMAINNAME }}
+          AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
+      - name: Set Azure static web app custom domain name
+        run: |
+          az network dns record-set cname set-record --resource-group $ZONE_RESOURCEGROUP --zone-name $ZONE_NAME --record-set-name $ZONE_RECORDSETNAME --cname "$ASWA_DEFAULTHOSTNAME." --output none
+          az network dns record-set cname set-record --resource-group $ZONE_RESOURCEGROUP --zone-name $ZONE_NAME --record-set-name "www.$ZONE_RECORDSETNAME" --cname "$ASWA_DEFAULTHOSTNAME." --output none
+          az staticwebapp hostname set --name $ASWA_NAME --hostname "$ZONE_RECORDSETNAME.$ZONE_NAME" --output none
+        env:
+          ASWA_NAME: ${{ secrets.ASWA_NAME }}
+          ASWA_DEFAULTHOSTNAME: ${{ steps.create-azure-static-web-app.outputs.ASWA_DEFAULTHOSTNAME }}
+          ZONE_NAME: ${{ secrets.ZONE_NAME }}
+          ZONE_RECORDSETNAME: ${{ secrets.ZONE_RECORDSETNAME }}
+          ZONE_RESOURCEGROUP: ${{ secrets.ZONE_RESOURCEGROUP }}
+
+  close_pull_request_job:
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    name: Close Pull Request Job
+    steps:
+      - name: Close Pull Request
+        id: closepullrequest
+        uses: Azure/static-web-apps-deploy@v0.0.1-preview
+        with:
+          azure_static_web_apps_api_token: ${{ steps.get-azure-static-web-app-token.outputs.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: "close"

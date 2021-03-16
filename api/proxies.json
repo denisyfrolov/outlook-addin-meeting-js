@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json.schemastore.org/proxies",
+  "proxies": {
+    "error": {
+      "matchCondition": {
+        "methods": ["GET", "POST"],
+        "route": "/api/4{http_code}"
+      },
+      "responseOverrides": {
+        "response.statusCode": "4{http_code}",
+        "response.statusReason": "Reason 4{http_code}",
+        "response.body": "{\"error\":{\"code\":406,\"message\":\"validation errors\",\"validation_errors\":[{\"property_path\":\"email\",\"message\":\"email\"}]}}",
+        "response.headers.Content-Type": "application/json"
+      }
+    },
+    "logs":{
+      "matchCondition": {
+        "methods": ["GET", "POST"],
+        "route": "/api/log"
+      },
+      "backendUri": "%LOG_PROCESSING_URL%"
+    }
+  }
+}

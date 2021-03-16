@@ -1,0 +1,151 @@
+name: Elasticsearch ACI CI/CD
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches:
+      - production
+
+jobs:
+  elasticsearch-aci:
+    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
+    runs-on: ubuntu-latest
+    name: Prepare and run Elasticsearch ACI
+    steps:
+      - uses: actions/checkout@v2
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Create Azure Container registry
+        run: |
+          az acr create --name $ACR_NAME --resource-group $AZURE_RESOURCEGROUP --location $AZURE_LOCATION --sku $ACR_SKU --output none
+          az acr update --name $ACR_NAME --admin-enabled true --output none
+        env:
+          ACR_NAME: ${{ secrets.ACR_NAME }}
+          ACR_SKU: ${{ secrets.ACR_SKU }}
+          AZURE_RESOURCEGROUP: ${{ secrets.AZURE_RESOURCEGROUP }}
+          AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
+      - name: Get ACR Username
+        id: get-acr-username
+        run: |
+          ACR_USERNAME="$(az acr credential show --name $ACR_NAME --query username | sed -e 's/^"//' -e 's/"$//')"
+          echo "::set-output name=ACR_USERNAME::$ACR_USERNAME"
+          echo "::add-mask::$ACR_USERNAME"
+        env:
+          ACR_NAME: ${{ secrets.ACR_NAME }}
+      - name: Get ACR Password
+        id: get-acr-password
+        run: |
+          ACR_PASSWORD="$(az acr credential show --name $ACR_NAME --query passwords[0].value | sed -e 's/^"//' -e 's/"$//')"
+          echo "::set-output name=ACR_PASSWORD::$ACR_PASSWORD"
+          echo "::add-mask::$ACR_PASSWORD"
+        env:
+          ACR_NAME: ${{ secrets.ACR_NAME }}
+      - name: Get ACR Login Server
+        id: get-acr-loginserver
+        run: |
+          ACR_LOGINSERVER="$(az acr show --name $ACR_NAME --query loginServer | sed -e 's/^"//' -e 's/"$//')"
+          echo "::set-output name=ACR_LOGINSERVER::$ACR_LOGINSERVER"
+          echo "::add-mask::$ACR_LOGINSERVER"
+        env:
+          ACR_NAME: ${{ secrets.ACR_NAME }}
+      - name: Set ACR elasticsearch repo
+        id: set-acr-elasticsearch
+        run: |
+          ACR_ELASTICSEARCH="$(echo $ACR_LOGINSERVER)/elasticsearch-single-node:latest"
+          echo "::set-output name=ACR_ELASTICSEARCH::$ACR_ELASTICSEARCH"
+          echo "::add-mask::$ACR_ELASTICSEARCH"
+        env:
+          ACR_LOGINSERVER: ${{ steps.get-acr-loginserver.outputs.ACR_LOGINSERVER }}
+      - name: Set ACR logstash repo
+        id: set-acr-logstash
+        run: |
+          ACR_LOGSTASH="$(echo $ACR_LOGINSERVER)/logstash:latest"
+          echo "::set-output name=ACR_LOGSTASH::$ACR_LOGSTASH"
+          echo "::add-mask::$ACR_LOGSTASH"
+        env:
+          ACR_LOGINSERVER: ${{ steps.get-acr-loginserver.outputs.ACR_LOGINSERVER }}
+      - name: Set ACR kibana repo
+        id: set-acr-kibana
+        run: |
+          ACR_KIBANA="$(echo $ACR_LOGINSERVER)/kibana:latest"
+          echo "::set-output name=ACR_KIBANA::$ACR_KIBANA"
+          echo "::add-mask::$ACR_KIBANA"
+        env:
+          ACR_LOGINSERVER: ${{ steps.get-acr-loginserver.outputs.ACR_LOGINSERVER }}
+      - name: Azure Container Registry Login
+        uses: Azure/docker-login@v1
+        with:
+          username: ${{ steps.get-acr-username.outputs.ACR_USERNAME }}
+          password: ${{ steps.get-acr-password.outputs.ACR_PASSWORD }} 
+          login-server: ${{ steps.get-acr-loginserver.outputs.ACR_LOGINSERVER }}
+      - name: Build and push Docker image elasticsearch
+        uses: docker/build-push-action@v2.3.0
+        with:
+          context: ./Docker/elasticsearch
+          tags: ${{ steps.set-acr-elasticsearch.outputs.ACR_ELASTICSEARCH }}
+          push: true
+      - name: Build and push Docker image logstash
+        uses: docker/build-push-action@v2.3.0
+        with:
+          context: ./Docker/logstash
+          tags: ${{ steps.set-acr-logstash.outputs.ACR_LOGSTASH }}
+          push: true
+      - name: Build and push Docker image kibana
+        uses: docker/build-push-action@v2.3.0
+        with:
+          context: ./Docker/kibana
+          tags: ${{ steps.set-acr-kibana.outputs.ACR_KIBANA }}
+          push: true
+      - name: Create Azure Storage account
+        run: |
+          az storage account create --name $ACI_STORAGEACCOUNTNAME --resource-group $AZURE_RESOURCEGROUP --location $AZURE_LOCATION --sku $ACI_STORAGEACCOUNTSKU --output none
+        env:
+          ACI_STORAGEACCOUNTNAME: ${{ secrets.ACI_STORAGEACCOUNTNAME }}
+          ACI_STORAGEACCOUNTSKU: ${{ secrets.ACI_STORAGEACCOUNTSKU }}
+          AZURE_RESOURCEGROUP: ${{ secrets.AZURE_RESOURCEGROUP }}
+          AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
+      - name: Create Azure Storage share
+        run: |
+          az storage share create --name $ACI_ELASTICSEARCHDATASHARENAME --account-name $ACI_STORAGEACCOUNTNAME --output none
+        env:
+          ACI_STORAGEACCOUNTNAME: ${{ secrets.ACI_STORAGEACCOUNTNAME }}
+          ACI_ELASTICSEARCHDATASHARENAME: ${{ secrets.ACI_ELASTICSEARCHDATASHARENAME }}
+      - name: Install Docker Compose CLI
+        run: |
+          curl -L https://raw.githubusercontent.com/docker/compose-cli/main/scripts/install/install_linux.sh | sh
+      - name: Docker Login Azure
+        run: |
+          AZURE_CLIENTID="$(echo $AZURE_CREDENTIALS | jq '.clientId' | sed -e 's/^"//' -e 's/"$//')"
+          AZURE_CLIENTSECRET="$(echo $AZURE_CREDENTIALS | jq '.clientSecret' | sed -e 's/^"//' -e 's/"$//')"
+          AZURE_TENANTID="$(echo $AZURE_CREDENTIALS | jq '.tenantId' | sed -e 's/^"//' -e 's/"$//')"
+          echo "::add-mask::$AZURE_CLIENTID"
+          echo "::add-mask::$AZURE_CLIENTSECRET"
+          echo "::add-mask::$AZURE_TENANTID"
+          docker login azure --client-id $AZURE_CLIENTID --client-secret $AZURE_CLIENTSECRET --tenant-id $AZURE_TENANTID
+        env:
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+      - name: Create an aci context
+        run: |
+          AZURE_SUBSCRIPTIONID="$(echo $AZURE_CREDENTIALS | jq '.subscriptionId' | sed -e 's/^"//' -e 's/"$//')"
+          echo "::add-mask::$AZURE_SUBSCRIPTIONID"
+          docker context create aci --subscription-id $AZURE_SUBSCRIPTIONID --resource-group $AZURE_RESOURCEGROUP --location $AZURE_LOCATION acicontext
+        env:
+          AZURE_CREDENTIALS: ${{ secrets.AZURE_CREDENTIALS }}
+          AZURE_RESOURCEGROUP: ${{ secrets.AZURE_RESOURCEGROUP }}
+          AZURE_LOCATION: ${{ secrets.AZURE_LOCATION }}
+      - name: Run app
+        run: |
+          docker --context acicontext compose --file ./Docker/docker-compose.yaml --project-name $ACI_PROJECTNAME up --domainname $ACI_DOMAINNAME
+        env:
+          ACI_PROJECTNAME: ${{ secrets.ACI_PROJECTNAME }}
+          ACI_DOMAINNAME: ${{ secrets.ACI_DOMAINNAME }}
+          ACR_ELASTICSEARCH: ${{ steps.set-acr-elasticsearch.outputs.ACR_ELASTICSEARCH }}
+          ACR_LOGSTASH: ${{ steps.set-acr-logstash.outputs.ACR_LOGSTASH }}
+          ACR_KIBANA: ${{ steps.set-acr-kibana.outputs.ACR_KIBANA }}
+          ACI_STORAGEACCOUNTNAME: ${{ secrets.ACI_STORAGEACCOUNTNAME }}
+          ACI_ELASTICSEARCHDATASHARENAME: ${{ secrets.ACI_ELASTICSEARCHDATASHARENAME }}

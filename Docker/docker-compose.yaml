@@ -1,0 +1,54 @@
+version: '2.2'
+services:
+  elasticsearch:
+    image: ${ACR_ELASTICSEARCH}
+    restart: always
+    container_name: elasticsearch
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - elasticsearch-data:/usr/share/elasticsearch/data
+    ports:
+      - 9200:9200
+      - 9300:9300
+    networks:
+      - elastic
+
+  logstash:
+    image: ${ACR_LOGSTASH}
+    depends_on: 
+      - elasticsearch
+    restart: always
+    container_name: logstash
+    ports:
+      - 5050:5050
+    networks:
+      - elastic
+
+  kibana:
+    image: ${ACR_KIBANA}
+    depends_on: 
+      - elasticsearch
+      - logstash
+    restart: always
+    container_name: kibana
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      ELASTICSEARCH_HOSTS: '["http://elasticsearch:9200"]'
+    ports:
+      - 5601:5601
+    networks:
+      - elastic
+
+volumes:
+  elasticsearch-data:
+    driver: azure_file
+    driver_opts:
+      share_name: ${ACI_ELASTICSEARCHDATASHARENAME}
+      storage_account_name: ${ACI_STORAGEACCOUNTNAME}
+
+networks:
+  elastic:
+    driver: bridge
