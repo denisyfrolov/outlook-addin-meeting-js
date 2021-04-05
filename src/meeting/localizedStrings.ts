@@ -1,10 +1,10 @@
-export var commandsLocalizedStrings = (function() {
+export var localizedStrings = (function() {
   "use strict";
 
-  var commandsLocalizedStrings: any = {};
+  var localizedStrings: any = {};
 
   // JSON object for English strings
-  commandsLocalizedStrings.EN = {
+  localizedStrings.EN = {
     MessageBody: '<br><a href="%(url)s" target="_blank">%(text)s</a>',
     Success: "Success",
     Error: "Error",
@@ -34,7 +34,7 @@ export var commandsLocalizedStrings = (function() {
   };
 
   // JSON object for Spanish strings
-  commandsLocalizedStrings.RU = {
+  localizedStrings.RU = {
     MessageBody: '<br><a href="%(url)s" target="_blank">%(text)s</a>',
     Success: "Успешно",
     Error: "Ошибка",
@@ -63,24 +63,24 @@ export var commandsLocalizedStrings = (function() {
     }
   };
 
-  commandsLocalizedStrings.getLocaleStrings = function(locale) {
+  localizedStrings.getLocaleStrings = function(locale) {
     var text;
 
     // Get the resource strings that match the language.
     switch (locale) {
       case "en-US":
-        text = commandsLocalizedStrings.EN;
+        text = localizedStrings.EN;
         break;
       case "ru-RU":
-        text = commandsLocalizedStrings.RU;
+        text = localizedStrings.RU;
         break;
       default:
-        text = commandsLocalizedStrings.EN;
+        text = localizedStrings.EN;
         break;
     }
 
     return text;
   };
 
-  return commandsLocalizedStrings;
+  return localizedStrings;
 })();

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en" data-lt-installed="true">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <title><%= TASKPANE_PAGE_TITLE %></title>
+        <!-- Office JavaScript API -->
+        <script type="text/javascript" src="https://appsforoffice.microsoft.com/lib/1.1/hosted/office.js"></script>
+    </head>
+    <body class="notranslate">
+        <div id="root" class="container-fluid px-0">
+            <div class="app row mx-0">
+                <div class="content">
+                    <div class="meetings-create-page">
+                        <div class="header grid-container">
+                            <div class="grid-row h-100">
+                                <div class="grid-col-12 header-content">
+                                    <a href="#">
+                                        <img src="../../assets/logo-taskpane.png" alt="logo" title="logo" class="logo">
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid-container container-page">
+                            <div class="grid-row">
+                                <div class="grid-col-xxs-12 grid-offset-xxs-0 grid-col-md-10 grid-offset-md-1 grid-col-lg-8">
+                                    <form class="create-meeting-form">
+                                        <h5><%= TASKPANE_FORM_TITLE %></h5>
+                                        <div class="tooltip-container">
+                                            <span class="label"><%= TASKPANE_FORM_MEETINGNAME_LABEL %></span>
+                                        </div>
+                                        <input type="text" required="" class="name" value="" id="meetingname">
+                                        <div class="d-flex align-items-center set-public">
+                                            <label for="isguestsallowed">
+                                                <div class="public-access-container">
+                                                    <input type="checkbox" id="isguestsallowed"></input>
+                                                    <span><%= TASKPANE_FORM_ALLOWGUESTS_LABEL %></span>
+                                                </div>
+                                            </label>
+                                        </div>
+                                        <div class="notification-static notification-static-warning">
+                                            <div class="n-static-icon">
+                                                <svg width="24" height="22" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path d="M11 17.5C11 17.2239 11.2239 17 11.5 17H12.5C12.7761 17 13 17.2239 13 17.5V18.5C13 18.7761 12.7761 19 12.5 19H11.5C11.2239 19 11 18.7761 11 18.5V17.5Z" fill="#FF8F09"></path>
+                                                    <path d="M13 9C13 8.44772 12.5523 8 12 8C11.4477 8 11 8.44772 11 9V15C11 15.5523 11.4477 16 12 16C12.5523 16 13 15.5523 13 15V9Z" fill="#FF8F09"></path>
+                                                    <path fill-rule="evenodd" clip-rule="evenodd" d="M14.7257 2.59651L23.5871 18.2739C24.7425 20.318 23.3403 23 20.8614 23H3.13861C0.659692 23 -0.742477 20.318 0.412894 18.2739L9.27428 2.59651C10.4775 0.467828 13.5225 0.467832 14.7257 2.59651ZM12.9846 3.58065C12.547 2.80645 11.453 2.80645 11.0154 3.58064L2.15401 19.2581C1.71641 20.0323 2.26341 21 3.13861 21H20.8614C21.7366 21 22.2836 20.0323 21.846 19.2581L12.9846 3.58065Z" fill="#FF8F09"></path>
+                                                </svg>
+                                            </div>
+                                            <div class="n-static-content"><%= TASKPANE_FORM_POLICY_WARN_1 %>
+                                                <a target="_blank" class="link-green" href="<%= TASKPANE_FORM_POLICY_WARN_URL %>"><%= TASKPANE_FORM_POLICY_WARN_2 %></a>
+                                            </div>
+                                        </div>
+                                        <div class="control-container">
+                                            <span class="nd-btn green-70" id="create">
+                                                <span><%= TASKPANE_FORM_BUTTON_CREATE_LABEL_1 %></span>
+                                                <span class="grid-xxs-d-none grid-sm-d-block">&nbsp;<%= TASKPANE_FORM_BUTTON_CREATE_LABEL_2 %></span>
+                                            </span>
+                                            <span class="nd-btn green-70-outline" id="cancel">
+                                                <span><%= TASKPANE_FORM_BUTTON_CANCEL_LABEL %></span>
+                                            </span>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>

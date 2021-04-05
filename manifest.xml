@@ -27,7 +27,7 @@
 	</SupportUrl>
 	<!-- Domains that will be allowed when navigating. For example, if you use ShowTaskpane and then have an href link, navigation will only be allowed if the domain is on this list. -->
 	<AppDomains>
-		<AppDomain>meeting.contoso.com</AppDomain>
+		<AppDomain>https://meeting.contoso.com</AppDomain>
 	</AppDomains>
 	<!-- End Basic Settings. -->
 	<Hosts>
@@ -70,12 +70,12 @@
 							<!-- Up to 6 Groups added per Tab -->
 							<Group id="apptComposeGroup">
 								<Label resid="Group.Label" />
-								<Control xsi:type="Button" id="insertMeetingButton">
-									<Label resid="Button.Label" />
-									<Tooltip resid="Button.Tooltip" />
+								<Control xsi:type="Button" id="commandsButton">
+									<Label resid="CommandsButton.Label" />
+									<Tooltip resid="CommandsButton.Tooltip" />
 									<Supertip>
-										<Title resid="Button.Label" />
-										<Description resid="Button.Tooltip" />
+										<Title resid="CommandsButton.Label" />
+										<Description resid="CommandsButton.Tooltip" />
 									</Supertip>
 									<Icon>
 										<bt:Image size="16" resid="Icon.16x16" />
@@ -84,7 +84,24 @@
 										<bt:Image size="80" resid="Icon.80x80" />
 									</Icon>
 									<Action xsi:type="ExecuteFunction">
-										<FunctionName>insertMeeting</FunctionName>
+										<FunctionName>commandsAction</FunctionName>
+									</Action>
+								</Control>
+								<Control xsi:type="Button" id="taskPaneButton">
+									<Label resid="TaskpaneButton.Label" />
+									<Tooltip resid="TaskpaneButton.Tooltip" />
+									<Supertip>
+										<Title resid="TaskpaneButton.Label" />
+										<Description resid="TaskpaneButton.Tooltip" />
+									</Supertip>
+									<Icon>
+										<bt:Image size="16" resid="Icon.16x16" />
+										<bt:Image size="32" resid="Icon.32x32" />
+										<bt:Image size="64" resid="Icon.64x64" />
+										<bt:Image size="80" resid="Icon.80x80" />
+									</Icon>
+									<Action xsi:type="ShowTaskpane">
+										<SourceLocation resid="Taskpane.Url"/>
 									</Action>
 								</Control>
 							</Group>
@@ -110,17 +127,26 @@
 			</bt:Images>
 			<bt:Urls>
 				<bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html" />
+				<bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html">
+					<bt:Override Locale="ru-RU" Value="https://localhost:3000/taskpane-ru.html" />
+				</bt:Url>
 			</bt:Urls>
             <bt:ShortStrings>
                 <bt:String id="Group.Label" DefaultValue="ContosoMeeting">
                     <bt:Override Locale="ru-RU" Value="КонтосоСобрание" />
                 </bt:String>
-                <bt:String id="Button.Label" DefaultValue="Add a Contoso Meeting">
-					<bt:Override Locale="ru-RU" Value="Добавить собрание Contoso" />
+                <bt:String id="CommandsButton.Label" DefaultValue="Add a Contoso Meeting">
+                    <bt:Override Locale="ru-RU" Value="Добавить собрание Contoso" />
+                </bt:String>
+                <bt:String id="TaskpaneButton.Label" DefaultValue="Open pane">
+                    <bt:Override Locale="ru-RU" Value="Открыть панель" />
                 </bt:String>
             </bt:ShortStrings>
 			<bt:LongStrings>
-                <bt:String id="Button.Tooltip" DefaultValue="Tooltip">
+                <bt:String id="CommandsButton.Tooltip" DefaultValue="Tooltip">
+                    <bt:Override Locale="ru-RU" Value="Подсказка" />
+                </bt:String>
+                <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Tooltip">
                     <bt:Override Locale="ru-RU" Value="Подсказка" />
                 </bt:String>
             </bt:LongStrings>
@@ -146,21 +172,38 @@
                                 <!-- Up to 6 Groups added per Tab -->
 								<Group id="apptComposeGroup">
 									<Label resid="Group.Label" />
-									<Control xsi:type="Button" id="insertMeetingButton">
-										<Label resid="Button.Label" />
-										<Tooltip resid="Button.Tooltip" />
+									<Control xsi:type="Button" id="commandsButton">
+										<Label resid="CommandsButton.Label" />
+										<Tooltip resid="CommandsButton.Tooltip" />
 										<Supertip>
-											<Title resid="Button.Label" />
-											<Description resid="Button.Tooltip" />
+											<Title resid="CommandsButton.Label" />
+											<Description resid="CommandsButton.Tooltip" />
 										</Supertip>
 										<Icon>
 											<bt:Image size="16" resid="Icon.16x16" />
-                                            <bt:Image size="32" resid="Icon.32x32" />
-                                            <bt:Image size="64" resid="Icon.64x64" />
-                                            <bt:Image size="80" resid="Icon.80x80" />
+											<bt:Image size="32" resid="Icon.32x32" />
+											<bt:Image size="64" resid="Icon.64x64" />
+											<bt:Image size="80" resid="Icon.80x80" />
 										</Icon>
 										<Action xsi:type="ExecuteFunction">
-											<FunctionName>insertMeeting</FunctionName>
+											<FunctionName>commandsAction</FunctionName>
+										</Action>
+									</Control>
+									<Control xsi:type="Button" id="taskPaneButton">
+										<Label resid="TaskpaneButton.Label" />
+										<Tooltip resid="TaskpaneButton.Tooltip" />
+										<Supertip>
+											<Title resid="TaskpaneButton.Label" />
+											<Description resid="TaskpaneButton.Tooltip" />
+										</Supertip>
+										<Icon>
+											<bt:Image size="16" resid="Icon.16x16" />
+											<bt:Image size="32" resid="Icon.32x32" />
+											<bt:Image size="64" resid="Icon.64x64" />
+											<bt:Image size="80" resid="Icon.80x80" />
+										</Icon>
+										<Action xsi:type="ShowTaskpane">
+											<SourceLocation resid="Taskpane.Url"/>
 										</Action>
 									</Control>
 								</Group>
@@ -172,8 +215,8 @@
 						<FunctionFile resid="Commands.Url" />
                         <!-- MobileOnlineMeetingCommandSurface -->
 						<ExtensionPoint xsi:type="MobileOnlineMeetingCommandSurface">
-							<Control xsi:type="MobileButton" id="insertMeetingButton">
-								<Label resid="Button.Label" />
+							<Control xsi:type="MobileButton" id="commandsMobileButton">
+								<Label resid="CommandsMobileButton.Label" />
 								<Icon xsi:type="bt:MobileIconList">
 									<bt:Image size="25" scale="1" resid="MobileIcon.25x25"/>
                                     <bt:Image size="25" scale="2" resid="MobileIcon.25x25"/>
@@ -186,7 +229,7 @@
                                     <bt:Image size="48" scale="3" resid="MobileIcon.48x48"/>
 								</Icon>
 								<Action xsi:type="ExecuteFunction">
-									<FunctionName>insertMeeting</FunctionName>
+									<FunctionName>commandsAction</FunctionName>
 								</Action>
 							</Control>
 						</ExtensionPoint>
@@ -219,17 +262,29 @@
                 </bt:Images>
                 <bt:Urls>
                     <bt:Url id="Commands.Url" DefaultValue="https://localhost:3000/commands.html" />
+					<bt:Url id="Taskpane.Url" DefaultValue="https://localhost:3000/taskpane.html">
+						<bt:Override Locale="ru-RU" Value="https://localhost:3000/taskpane-ru.html" />
+					</bt:Url>
                 </bt:Urls>
                 <bt:ShortStrings>
                     <bt:String id="Group.Label" DefaultValue="ContosoMeeting">
                         <bt:Override Locale="ru-RU" Value="КонтосоСобрание" />
                     </bt:String>
-                    <bt:String id="Button.Label" DefaultValue="Add a Contoso Meeting">
+                    <bt:String id="CommandsButton.Label" DefaultValue="Add a Contoso Meeting">
                         <bt:Override Locale="ru-RU" Value="Добавить собрание Contoso" />
+                    </bt:String>
+                    <bt:String id="CommandsMobileButton.Label" DefaultValue="Add a Contoso Meeting">
+                        <bt:Override Locale="ru-RU" Value="Добавить собрание Contoso" />
+                    </bt:String>
+                    <bt:String id="TaskpaneButton.Label" DefaultValue="Open pane">
+                        <bt:Override Locale="ru-RU" Value="Открыть панель" />
                     </bt:String>
                 </bt:ShortStrings>
                 <bt:LongStrings>
-                    <bt:String id="Button.Tooltip" DefaultValue="Tooltip">
+                    <bt:String id="CommandsButton.Tooltip" DefaultValue="Tooltip">
+                        <bt:Override Locale="ru-RU" Value="Подсказка" />
+                    </bt:String>
+                    <bt:String id="TaskpaneButton.Tooltip" DefaultValue="Tooltip">
                         <bt:Override Locale="ru-RU" Value="Подсказка" />
                     </bt:String>
                 </bt:LongStrings>

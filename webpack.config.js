@@ -1,12 +1,13 @@
 require("dotenv").config();
 
 const devCerts = require("office-addin-dev-certs");
-var webpack = require('webpack');
+const webpack = require("webpack");
 const { CleanWebpackPlugin } = require("clean-webpack-plugin");
 const CopyWebpackPlugin = require("copy-webpack-plugin");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
 const WebpackAutoInject = require("webpack-auto-inject-version");
 const GenerateJsonPlugin = require("generate-json-webpack-plugin");
+const HtmlWebpackTagsPlugin = require("html-webpack-tags-plugin");
 
 const urlDev = "https://localhost:3000/";
 
@@ -46,10 +47,16 @@ module.exports = async (env, options) => {
   const AppDomain = process.env.APPDOMAIN;
   const GroupLabel = process.env.GROUPLABEL;
   const GroupLabelRu = process.env.GROUPLABEL_RU;
-  const ButtonLabel = process.env.BUTTONLABEL;
-  const ButtonLabelRu = process.env.BUTTONLABEL_RU;
-  const ButtonTooltip = process.env.BUTTONTOOLTIP;
-  const ButtonTooltipRu = process.env.BUTTONTOOLTIP_RU;
+  const CommandsButtonLabel = process.env.COMMANDSBUTTONLABEL;
+  const CommandsButtonLabelRu = process.env.COMMANDSBUTTONLABEL_RU;
+  const CommandsButtonTooltip = process.env.COMMANDSBUTTONTOOLTIP;
+  const CommandsButtonTooltipRu = process.env.COMMANDSBUTTONTOOLTIP_RU;
+  const CommandsMobileButtonLabel = process.env.COMMANDSMOBILEBUTTONLABEL;
+  const CommandsMobileButtonLabelRu = process.env.COMMANDSMOBILEBUTTONLABEL_RU;
+  const TaskpaneButtonLabel = process.env.TASKPANEBUTTONLABEL;
+  const TaskpaneButtonLabelRu = process.env.TASKPANEBUTTONLABEL_RU;
+  const TaskpaneButtonTooltip = process.env.TASKPANEBUTTONTOOLTIP;
+  const TaskpaneButtonTooltipRu = process.env.TASKPANEBUTTONTOOLTIP_RU;
   const API_URL = JSON.stringify(process.env.API_URL);
   const NotificationIcon = JSON.stringify(process.env.NOTIFICATIONICON);
   const EnableTrace = process.env.ENABLETRACE;
@@ -64,15 +71,35 @@ module.exports = async (env, options) => {
   const LogstashUrl = JSON.stringify(process.env.LOGSTASHURL);
   const LogstashUsername = JSON.stringify(process.env.LOGSTASHUSERNAME);
   const LogstashPassword = JSON.stringify(process.env.LOGSTASHPASSWORD);
+  const TASKPANE_PAGE_TITLE = process.env.TASKPANE_PAGE_TITLE;
+  const TASKPANE_PAGE_TITLE_RU = process.env.TASKPANE_PAGE_TITLE_RU;
+  const TASKPANE_FORM_TITLE = process.env.TASKPANE_FORM_TITLE;
+  const TASKPANE_FORM_TITLE_RU = process.env.TASKPANE_FORM_TITLE_RU;
+  const TASKPANE_FORM_MEETINGNAME_LABEL = process.env.TASKPANE_FORM_MEETINGNAME_LABEL;
+  const TASKPANE_FORM_MEETINGNAME_LABEL_RU = process.env.TASKPANE_FORM_MEETINGNAME_LABEL_RU;
+  const TASKPANE_FORM_ALLOWGUESTS_LABEL = process.env.TASKPANE_FORM_ALLOWGUESTS_LABEL;
+  const TASKPANE_FORM_ALLOWGUESTS_LABEL_RU = process.env.TASKPANE_FORM_ALLOWGUESTS_LABEL_RU;
+  const TASKPANE_FORM_POLICY_WARN_1 = process.env.TASKPANE_FORM_POLICY_WARN_1;
+  const TASKPANE_FORM_POLICY_WARN_1_RU = process.env.TASKPANE_FORM_POLICY_WARN_1_RU;
+  const TASKPANE_FORM_POLICY_WARN_2 = process.env.TASKPANE_FORM_POLICY_WARN_2;
+  const TASKPANE_FORM_POLICY_WARN_2_RU = process.env.TASKPANE_FORM_POLICY_WARN_2_RU;
+  const TASKPANE_FORM_POLICY_WARN_URL = process.env.TASKPANE_FORM_POLICY_WARN_URL;
+  const TASKPANE_FORM_POLICY_WARN_URL_RU = process.env.TASKPANE_FORM_POLICY_WARN_URL_RU;
+  const TASKPANE_FORM_BUTTON_CREATE_LABEL_1 = process.env.TASKPANE_FORM_BUTTON_CREATE_LABEL_1;
+  const TASKPANE_FORM_BUTTON_CREATE_LABEL_1_RU = process.env.TASKPANE_FORM_BUTTON_CREATE_LABEL_1_RU;
+  const TASKPANE_FORM_BUTTON_CREATE_LABEL_2 = process.env.TASKPANE_FORM_BUTTON_CREATE_LABEL_2;
+  const TASKPANE_FORM_BUTTON_CREATE_LABEL_2_RU = process.env.TASKPANE_FORM_BUTTON_CREATE_LABEL_2_RU;
+  const TASKPANE_FORM_BUTTON_CANCEL_LABEL = process.env.TASKPANE_FORM_BUTTON_CANCEL_LABEL;
+  const TASKPANE_FORM_BUTTON_CANCEL_LABEL_RU = process.env.TASKPANE_FORM_BUTTON_CANCEL_LABEL_RU;
   const config = {
     devtool: "source-map",
     entry: {
       polyfill: "@babel/polyfill",
-      commands: "./src/commands/commands.ts",
-      commandsLocalizedStrings: "./src/commands/commandsLocalizedStrings.ts"
+      taskpane: "./src/taskpane/taskpane.ts",
+      commands: "./src/commands/commands.ts"
     },
-    node: { 
-      fs: 'empty' 
+    node: {
+      fs: "empty"
     },
     resolve: {
       extensions: [".ts", ".tsx", ".html", ".js"]
@@ -111,25 +138,37 @@ module.exports = async (env, options) => {
     plugins: [
       new CleanWebpackPlugin(),
       new webpack.DefinePlugin({
-        'process.env': {
-          "API_URL": API_URL,
-          "NotificationIcon": NotificationIcon,
-          "EnableTrace": EnableTrace,
-          "EnableDiagnosticInfoInTraceAndError": EnableDiagnosticInfoInTraceAndError,
-          "EnableNotificationInformationalMessage": EnableNotificationInformationalMessage,
-          "EnableNotificationErrorMessage": EnableNotificationErrorMessage,
-          "ApplicationInsightsInstrumentationKey": ApplicationInsightsInstrumentationKey,
-          "ApplicationInsightsAppRole": ApplicationInsightsAppRole,
-          "ApplicationInsightsEnableCorsCorrelation": ApplicationInsightsEnableCorsCorrelation,
-          "ApplicationInsightsEableRequestHeaderTracking": ApplicationInsightsEableRequestHeaderTracking,
-          "ApplicationInsightsEnableResponseHeaderTracking": ApplicationInsightsEnableResponseHeaderTracking,
-          "LogstashUrl": LogstashUrl,
-          "LogstashUsername": LogstashUsername,
-          "LogstashPassword": LogstashPassword
+        "process.env": {
+          API_URL: API_URL,
+          NotificationIcon: NotificationIcon,
+          EnableTrace: EnableTrace,
+          EnableDiagnosticInfoInTraceAndError: EnableDiagnosticInfoInTraceAndError,
+          EnableNotificationInformationalMessage: EnableNotificationInformationalMessage,
+          EnableNotificationErrorMessage: EnableNotificationErrorMessage,
+          ApplicationInsightsInstrumentationKey: ApplicationInsightsInstrumentationKey,
+          ApplicationInsightsAppRole: ApplicationInsightsAppRole,
+          ApplicationInsightsEnableCorsCorrelation: ApplicationInsightsEnableCorsCorrelation,
+          ApplicationInsightsEableRequestHeaderTracking: ApplicationInsightsEableRequestHeaderTracking,
+          ApplicationInsightsEnableResponseHeaderTracking: ApplicationInsightsEnableResponseHeaderTracking,
+          LogstashUrl: LogstashUrl,
+          LogstashUsername: LogstashUsername,
+          LogstashPassword: LogstashPassword
         }
       }),
       new CopyWebpackPlugin({
         patterns: [
+          {
+            to: "taskpane.css",
+            from: "./src/taskpane/taskpane.css"
+          },
+          {
+            to: "bootstrap.min.css",
+            from: "node_modules/bootstrap/dist/css/bootstrap.min.css"
+          },
+          {
+            to: "bootstrap.min.css.map",
+            from: "node_modules/bootstrap/dist/css/bootstrap.min.css.map"
+          },
           {
             to: "[name]." + buildType + ".[ext]",
             from: "manifest*.xml",
@@ -144,55 +183,179 @@ module.exports = async (env, options) => {
                     /<ProviderName>(?:.*?)<\/ProviderName>/g,
                     "<ProviderName>" + ProviderName + "</ProviderName>"
                   )
-                  .replace(
-                    /<AppDomain>(?:.*?)<\/AppDomain>/g,
-                    "<AppDomain>" + AppDomain + "</AppDomain>"
-                  )
+                  .replace(/<AppDomain>(?:.*?)<\/AppDomain>/g, "<AppDomain>" + AppDomain + "</AppDomain>")
                   .replace(
                     /<DisplayName>?(?:.*?)<\/DisplayName>/gms,
-                    "<DisplayName DefaultValue=\"" + DisplayName + "\">\r\n" +
-                    "		<Override Locale=\"ru-RU\" Value=\"" + DisplayNameRu + "\" />\r\n" +
-                    "	</DisplayName>"
-                  ).replace(
+                    '<DisplayName DefaultValue="' +
+                      DisplayName +
+                      '">\r\n' +
+                      '		<Override Locale="ru-RU" Value="' +
+                      DisplayNameRu +
+                      '" />\r\n' +
+                      "	</DisplayName>"
+                  )
+                  .replace(
                     /<Description>?(?:.*?)<\/Description>/gms,
-                    "<Description DefaultValue=\"" + Description + "\">\r\n" +
-                    "		<Override Locale=\"ru-RU\" Value=\"" + DescriptionRu + "\" />\r\n" +
-                    "	</Description>"
-                  ).replace(
+                    '<Description DefaultValue="' +
+                      Description +
+                      '">\r\n' +
+                      '		<Override Locale="ru-RU" Value="' +
+                      DescriptionRu +
+                      '" />\r\n' +
+                      "	</Description>"
+                  )
+                  .replace(
                     /<SupportUrl>?(?:.*?)<\/SupportUrl>/gms,
-                    "<SupportUrl DefaultValue=\"" + SupportUrl + "\">\r\n" +
-                    "		<Override Locale=\"ru-RU\" Value=\"" + SupportUrlRu + "\" />\r\n" +
-                    "	</SupportUrl>"
-                  ).replace(
+                    '<SupportUrl DefaultValue="' +
+                      SupportUrl +
+                      '">\r\n' +
+                      '		<Override Locale="ru-RU" Value="' +
+                      SupportUrlRu +
+                      '" />\r\n' +
+                      "	</SupportUrl>"
+                  )
+                  .replace(
                     /^\s{16}<bt:String id="Group\.Label">?(?:.*?)^\s{16}<\/bt:String>/gms,
-                    new Array(17).join(" ") + "<bt:String id=\"Group.Label\" DefaultValue=\"" + GroupLabel + "\">\r\n" +
-                    new Array(21).join(" ") + "<bt:Override Locale=\"ru-RU\" Value=\"" + GroupLabelRu + "\" />\r\n" +
-                    new Array(17).join(" ") + "</bt:String>"
-                  ).replace(
+                    new Array(17).join(" ") +
+                      '<bt:String id="Group.Label" DefaultValue="' +
+                      GroupLabel +
+                      '">\r\n' +
+                      new Array(21).join(" ") +
+                      '<bt:Override Locale="ru-RU" Value="' +
+                      GroupLabelRu +
+                      '" />\r\n' +
+                      new Array(17).join(" ") +
+                      "</bt:String>"
+                  )
+                  .replace(
                     /^\s{20}<bt:String id="Group\.Label">?(?:.*?)^\s{20}<\/bt:String>/gms,
-                    new Array(21).join(" ") + "<bt:String id=\"Group.Label\" DefaultValue=\"" + GroupLabel + "\">\r\n" +
-                    new Array(25).join(" ") + "<bt:Override Locale=\"ru-RU\" Value=\"" + GroupLabelRu + "\" />\r\n" +
-                    new Array(21).join(" ") + "</bt:String>"
-                  ).replace(
-                    /^\s{16}<bt:String id="Button\.Label">?(?:.*?)^\s{16}<\/bt:String>/gms,
-                    new Array(17).join(" ") + "<bt:String id=\"Button.Label\" DefaultValue=\"" + ButtonLabel + "\">\r\n" +
-                    new Array(21).join(" ") + "<bt:Override Locale=\"ru-RU\" Value=\"" + ButtonLabelRu + "\" />\r\n" +
-                    new Array(17).join(" ") + "</bt:String>"
-                  ).replace(
-                    /^\s{20}<bt:String id="Button\.Label">?(?:.*?)^\s{20}<\/bt:String>/gms,
-                    new Array(21).join(" ") + "<bt:String id=\"Button.Label\" DefaultValue=\"" + ButtonLabel + "\">\r\n" +
-                    new Array(25).join(" ") + "<bt:Override Locale=\"ru-RU\" Value=\"" + ButtonLabelRu + "\" />\r\n" +
-                    new Array(21).join(" ") + "</bt:String>"
-                  ).replace(
-                    /^\s{16}<bt:String id="Button\.Tooltip">?(?:.*?)^\s{16}<\/bt:String>/gms,
-                    new Array(17).join(" ") + "<bt:String id=\"Button.Tooltip\" DefaultValue=\"" + ButtonTooltip + "\">\r\n" +
-                    new Array(21).join(" ") + "<bt:Override Locale=\"ru-RU\" Value=\"" + ButtonTooltipRu + "\" />\r\n" +
-                    new Array(17).join(" ") + "</bt:String>"
-                  ).replace(
-                    /^\s{20}<bt:String id="Button\.Tooltip">?(?:.*?)^\s{20}<\/bt:String>/gms,
-                    new Array(21).join(" ") + "<bt:String id=\"Button.Tooltip\" DefaultValue=\"" + ButtonTooltip + "\">\r\n" +
-                    new Array(25).join(" ") + "<bt:Override Locale=\"ru-RU\" Value=\"" + ButtonTooltipRu + "\" />\r\n" +
-                    new Array(21).join(" ") + "</bt:String>"
+                    new Array(21).join(" ") +
+                      '<bt:String id="Group.Label" DefaultValue="' +
+                      GroupLabel +
+                      '">\r\n' +
+                      new Array(25).join(" ") +
+                      '<bt:Override Locale="ru-RU" Value="' +
+                      GroupLabelRu +
+                      '" />\r\n' +
+                      new Array(21).join(" ") +
+                      "</bt:String>"
+                  )
+                  .replace(
+                    /^\s{16}<bt:String id="CommandsButton\.Label">?(?:.*?)^\s{16}<\/bt:String>/gms,
+                    new Array(17).join(" ") +
+                      '<bt:String id="CommandsButton.Label" DefaultValue="' +
+                      CommandsButtonLabel +
+                      '">\r\n' +
+                      new Array(21).join(" ") +
+                      '<bt:Override Locale="ru-RU" Value="' +
+                      CommandsButtonLabelRu +
+                      '" />\r\n' +
+                      new Array(17).join(" ") +
+                      "</bt:String>"
+                  )
+                  .replace(
+                    /^\s{20}<bt:String id="CommandsButton\.Label">?(?:.*?)^\s{20}<\/bt:String>/gms,
+                    new Array(21).join(" ") +
+                      '<bt:String id="CommandsButton.Label" DefaultValue="' +
+                      CommandsButtonLabel +
+                      '">\r\n' +
+                      new Array(25).join(" ") +
+                      '<bt:Override Locale="ru-RU" Value="' +
+                      CommandsButtonLabelRu +
+                      '" />\r\n' +
+                      new Array(21).join(" ") +
+                      "</bt:String>"
+                  )
+                  .replace(
+                    /^\s{16}<bt:String id="CommandsButton\.Tooltip">?(?:.*?)^\s{16}<\/bt:String>/gms,
+                    new Array(17).join(" ") +
+                      '<bt:String id="CommandsButton.Tooltip" DefaultValue="' +
+                      CommandsButtonTooltip +
+                      '">\r\n' +
+                      new Array(21).join(" ") +
+                      '<bt:Override Locale="ru-RU" Value="' +
+                      CommandsButtonTooltipRu +
+                      '" />\r\n' +
+                      new Array(17).join(" ") +
+                      "</bt:String>"
+                  )
+                  .replace(
+                    /^\s{20}<bt:String id="CommandsButton\.Tooltip">?(?:.*?)^\s{20}<\/bt:String>/gms,
+                    new Array(21).join(" ") +
+                      '<bt:String id="CommandsButton.Tooltip" DefaultValue="' +
+                      CommandsButtonTooltip +
+                      '">\r\n' +
+                      new Array(25).join(" ") +
+                      '<bt:Override Locale="ru-RU" Value="' +
+                      CommandsButtonTooltipRu +
+                      '" />\r\n' +
+                      new Array(21).join(" ") +
+                      "</bt:String>"
+                  )
+                  .replace(
+                    /^\s{20}<bt:String id="CommandsMobileButton\.Label">?(?:.*?)^\s{20}<\/bt:String>/gms,
+                    new Array(21).join(" ") +
+                      '<bt:String id="CommandsMobileButton.Label" DefaultValue="' +
+                      CommandsMobileButtonLabel +
+                      '">\r\n' +
+                      new Array(25).join(" ") +
+                      '<bt:Override Locale="ru-RU" Value="' +
+                      CommandsMobileButtonLabelRu +
+                      '" />\r\n' +
+                      new Array(21).join(" ") +
+                      "</bt:String>"
+                  )
+                  .replace(
+                    /^\s{16}<bt:String id="TaskpaneButton\.Label">?(?:.*?)^\s{16}<\/bt:String>/gms,
+                    new Array(17).join(" ") +
+                      '<bt:String id="TaskpaneButton.Label" DefaultValue="' +
+                      TaskpaneButtonLabel +
+                      '">\r\n' +
+                      new Array(21).join(" ") +
+                      '<bt:Override Locale="ru-RU" Value="' +
+                      TaskpaneButtonLabelRu +
+                      '" />\r\n' +
+                      new Array(17).join(" ") +
+                      "</bt:String>"
+                  )
+                  .replace(
+                    /^\s{20}<bt:String id="TaskpaneButton\.Label">?(?:.*?)^\s{20}<\/bt:String>/gms,
+                    new Array(21).join(" ") +
+                      '<bt:String id="TaskpaneButton.Label" DefaultValue="' +
+                      TaskpaneButtonLabel +
+                      '">\r\n' +
+                      new Array(25).join(" ") +
+                      '<bt:Override Locale="ru-RU" Value="' +
+                      TaskpaneButtonLabelRu +
+                      '" />\r\n' +
+                      new Array(21).join(" ") +
+                      "</bt:String>"
+                  )
+                  .replace(
+                    /^\s{16}<bt:String id="TaskpaneButton\.Tooltip">?(?:.*?)^\s{16}<\/bt:String>/gms,
+                    new Array(17).join(" ") +
+                      '<bt:String id="TaskpaneButton.Tooltip" DefaultValue="' +
+                      TaskpaneButtonTooltip +
+                      '">\r\n' +
+                      new Array(21).join(" ") +
+                      '<bt:Override Locale="ru-RU" Value="' +
+                      TaskpaneButtonTooltipRu +
+                      '" />\r\n' +
+                      new Array(17).join(" ") +
+                      "</bt:String>"
+                  )
+                  .replace(
+                    /^\s{20}<bt:String id="TaskpaneButton\.Tooltip">?(?:.*?)^\s{20}<\/bt:String>/gms,
+                    new Array(21).join(" ") +
+                      '<bt:String id="TaskpaneButton.Tooltip" DefaultValue="' +
+                      TaskpaneButtonTooltip +
+                      '">\r\n' +
+                      new Array(25).join(" ") +
+                      '<bt:Override Locale="ru-RU" Value="' +
+                      TaskpaneButtonTooltipRu +
+                      '" />\r\n' +
+                      new Array(21).join(" ") +
+                      "</bt:String>"
                   );
               }
               return newContent;
@@ -202,13 +365,54 @@ module.exports = async (env, options) => {
       }),
       new WebpackAutoInject(),
       new HtmlWebpackPlugin({
+        filename: "taskpane.html",
+        template: "./src/taskpane/taskpane.ejs",
+        chunks: ["polyfill", "taskpane"],
+        templateParameters: {
+          TASKPANE_PAGE_TITLE: TASKPANE_PAGE_TITLE,
+          TASKPANE_FORM_TITLE: TASKPANE_FORM_TITLE,
+          TASKPANE_FORM_MEETINGNAME_LABEL: TASKPANE_FORM_MEETINGNAME_LABEL,
+          TASKPANE_FORM_ALLOWGUESTS_LABEL: TASKPANE_FORM_ALLOWGUESTS_LABEL,
+          TASKPANE_FORM_POLICY_WARN_1: TASKPANE_FORM_POLICY_WARN_1,
+          TASKPANE_FORM_POLICY_WARN_2: TASKPANE_FORM_POLICY_WARN_2,
+          TASKPANE_FORM_POLICY_WARN_URL: TASKPANE_FORM_POLICY_WARN_URL,
+          TASKPANE_FORM_BUTTON_CREATE_LABEL_1: TASKPANE_FORM_BUTTON_CREATE_LABEL_1,
+          TASKPANE_FORM_BUTTON_CREATE_LABEL_2: TASKPANE_FORM_BUTTON_CREATE_LABEL_2,
+          TASKPANE_FORM_BUTTON_CANCEL_LABEL: TASKPANE_FORM_BUTTON_CANCEL_LABEL
+        }
+      }),
+      new HtmlWebpackPlugin({
+        filename: "taskpane-ru.html",
+        template: "./src/taskpane/taskpane.ejs",
+        chunks: ["polyfill", "taskpane"],
+        templateParameters: {
+          TASKPANE_PAGE_TITLE: TASKPANE_PAGE_TITLE_RU,
+          TASKPANE_FORM_TITLE: TASKPANE_FORM_TITLE_RU,
+          TASKPANE_FORM_MEETINGNAME_LABEL: TASKPANE_FORM_MEETINGNAME_LABEL_RU,
+          TASKPANE_FORM_ALLOWGUESTS_LABEL: TASKPANE_FORM_ALLOWGUESTS_LABEL_RU,
+          TASKPANE_FORM_POLICY_WARN_1: TASKPANE_FORM_POLICY_WARN_1_RU,
+          TASKPANE_FORM_POLICY_WARN_2: TASKPANE_FORM_POLICY_WARN_2_RU,
+          TASKPANE_FORM_POLICY_WARN_URL: TASKPANE_FORM_POLICY_WARN_URL_RU,
+          TASKPANE_FORM_BUTTON_CREATE_LABEL_1: TASKPANE_FORM_BUTTON_CREATE_LABEL_1_RU,
+          TASKPANE_FORM_BUTTON_CREATE_LABEL_2: TASKPANE_FORM_BUTTON_CREATE_LABEL_2_RU,
+          TASKPANE_FORM_BUTTON_CANCEL_LABEL: TASKPANE_FORM_BUTTON_CANCEL_LABEL_RU
+        }
+      }),
+      new HtmlWebpackTagsPlugin({
+        files: ["taskpane.html", "taskpane-ru.html"],
+        tags: ["taskpane.css", "bootstrap.min.css"],
+        append: false
+      }),
+      new HtmlWebpackPlugin({
         filename: "commands.html",
         template: "./src/commands/commands.html",
-        chunks: ["polyfill", "commands", "commandsLocalizedStrings"]
+        chunks: ["polyfill", "commands"]
       }),
       new HtmlWebpackPlugin({
         hash: true,
-        filename: "index.html"
+        filename: "index.html",
+        title: "outlook-addin-meeting-js",
+        chunks: []
       }),
       new GenerateJsonPlugin("routes.json", routesData)
     ],

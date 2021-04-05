@@ -2,7 +2,7 @@
     "name": "outlook-addin-meeting-js",
     "description": "",
     "author": "",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "repository": {
         "type": "git",
         "url": "https://github.com/denisyfrolov/outlook-addin-meeting-js.git"
@@ -36,6 +36,7 @@
         "@babel/core": "^7.11.6",
         "@babel/polyfill": "^7.11.5",
         "@babel/preset-env": "^7.11.5",
+        "@babel/preset-typescript": "^7.13.0",
         "@types/find-process": "1.2.0",
         "@types/office-js": "^1.0.108",
         "@types/office-runtime": "^1.0.14",
@@ -51,6 +52,7 @@
         "generate-json-webpack-plugin": "^1.0.0",
         "html-loader": "^0.5.5",
         "html-webpack-plugin": "^4.5.0",
+        "html-webpack-tags-plugin": "^3.0.0",
         "office-addin-cli": "^1.0.13",
         "office-addin-debugging": "^3.0.34",
         "office-addin-dev-certs": "^1.5.5",
@@ -69,6 +71,9 @@
     "prettier": "office-addin-prettier-config",
     "dependencies": {
         "@microsoft/applicationinsights-web": "^2.5.11",
+        "bootstrap": "4.6.0",
+        "core-js": "^3.9.1",
+        "regenerator-runtime": "^0.13.7",
         "uuid": "^8.3.2"
     }
 }
