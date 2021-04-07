@@ -54,6 +54,7 @@ var operationId: string;
 var hostName: string;
 var origin: string;
 var pathname: string;
+var completionCallback: Function;
 
 /* global Office */
 
@@ -80,29 +81,29 @@ Office.onReady(() => {
 
 /**
  * Shows a notification when the add-in command is executed.
- * @param {Office.AddinCommands.Event} event
  * @param {string | null} meetingname
  * @param {boolean} [isguestsallowed=false]
  */
-export var insertMeeting = function(event?: Office.AddinCommands.Event, meetingname?: string, isguestsallowed: boolean = false): void {
-  processTrace(LoggingLocalizedText.Trace.EventStarted);
+export var insertMeeting = function(meetingname?: string, isguestsallowed: boolean = false, callback: Function = null): void {
+  completionCallback = callback;
+  processTrace(LoggingLocalizedText.Trace.Started);
   mailbox.getUserIdentityTokenAsync(function(getUserIdentityTokenAsyncResult) {
     if (getUserIdentityTokenAsyncResult.status !== Office.AsyncResultStatus.Succeeded) {
       processError({
         name: LoggingLocalizedText.Errors.FailedToGetIdentityToken,
         message: getUserIdentityTokenAsyncResult.error.message
       });
-      completeEvent(event, false);
+      complete(false);
     } else {
       userIdentityToken = getUserIdentityTokenAsyncResult.value;
       processTrace(LoggingLocalizedText.Trace.SuccessToGetIdentityToken, { userIdentityToken: userIdentityToken });
-      mailboxItem.subject.getAsync({ asyncContext: event }, function(getSubjectAsyncResult) {
+      mailboxItem.subject.getAsync(function(getSubjectAsyncResult) {
         if (getSubjectAsyncResult.status !== Office.AsyncResultStatus.Succeeded) {
           processError({
             name: LoggingLocalizedText.Errors.FailedToGetSubject,
             message: getSubjectAsyncResult.error.message
           });
-          completeEvent(getSubjectAsyncResult.asyncContext, false);
+          complete(false);
         } else {
           processTrace(LoggingLocalizedText.Trace.SuccessToGetSubject, { subject: getSubjectAsyncResult.value });
           if(!meetingname)
@@ -115,8 +116,7 @@ export var insertMeeting = function(event?: Office.AddinCommands.Event, meetingn
             displayLanguage,
             contentLanguage,
             userIdentityToken,
-            operationId,
-            event
+            operationId
           );
         }
       });
@@ -134,7 +134,6 @@ export var insertMeeting = function(event?: Office.AddinCommands.Event, meetingn
  * @param {string} contentLanguage
  * @param {string} userIdentityToken
  * @param {string} operationId
- * @param {Office.AddinCommands.Event | null} event
  */
 function processApiRequest(
   displayName: string,
@@ -144,8 +143,7 @@ function processApiRequest(
   displayLanguage: string,
   contentLanguage: string,
   userIdentityToken: string,
-  operationId: string,
-  event?: Office.AddinCommands.Event
+  operationId: string
 ): void {
   var apiRequestData = {
     owner_email: emailAddress,
@@ -192,7 +190,7 @@ function processApiRequest(
           apiResponseData: apiRequestResult.response.data
         }
       );
-      completeEvent(event, false);
+      complete(false);
     });
 }
 
@@ -200,33 +198,32 @@ function processApiRequest(
  * Process Api Response.
  * @param {string} meetingUrl
  * @param {string} meetingText
- * @param {Office.AddinCommands.Event | null} event
  */
-function processApiResponse(meetingUrl: string, meetingText: string, event?: Office.AddinCommands.Event): void {
+function processApiResponse(meetingUrl: string, meetingText: string): void {
   processTrace(LoggingLocalizedText.Trace.ProcessApiResponseStarted);
-  mailboxItem.location.setAsync(meetingUrl, { asyncContext: event }, function(setLocationAsyncResult) {
+  mailboxItem.location.setAsync(meetingUrl, function(setLocationAsyncResult) {
     if (setLocationAsyncResult.status !== Office.AsyncResultStatus.Succeeded) {
       processError({
         name: LoggingLocalizedText.Errors.FailedToSetLocation,
         message: setLocationAsyncResult.error.message
       });
-      completeEvent(setLocationAsyncResult.asyncContext, false);
+      complete(false);
     } else {
       processTrace(LoggingLocalizedText.Trace.SuccessToSetLocation);
-      mailboxItem.body.getAsync("html", { asyncContext: event }, function(getBodyAsyncResult) {
+      mailboxItem.body.getAsync("html", function(getBodyAsyncResult) {
         if (getBodyAsyncResult.status !== Office.AsyncResultStatus.Succeeded) {
           processError({
             name: LoggingLocalizedText.Errors.FailedToGetHTMLBody,
             message: getBodyAsyncResult.error.message
           });
-          completeEvent(getBodyAsyncResult.asyncContext, false);
+          complete(false);
         } else {
           processTrace(LoggingLocalizedText.Trace.SuccessToGetBody);
           newBody = sprintf(contentLocalizedText.MessageBody, {
             url: meetingUrl,
             text: meetingText
           });
-          updateBody(getBodyAsyncResult.value, getBodyAsyncResult.asyncContext);
+          updateBody(getBodyAsyncResult.value);
         }
       });
       processTrace(LoggingLocalizedText.Trace.ProcessApiResponseCompleted);
@@ -321,10 +318,9 @@ function showNotificationErrorMessage(message: string): void {
 /**
  * Update Body.
  * @param {string} existingBody
- * @param {Office.AddinCommands.Event | null} event
  */
-function updateBody(existingBody: string, event?: Office.AddinCommands.Event): void {
-  mailboxItem.body.setAsync(existingBody + newBody, { asyncContext: event, coercionType: "html" }, function(
+function updateBody(existingBody: string): void {
+  mailboxItem.body.setAsync(existingBody + newBody, { coercionType: "html" }, function(
     setBodyAsyncResult
   ) {
     if (setBodyAsyncResult.status !== Office.AsyncResultStatus.Succeeded) {
@@ -332,27 +328,26 @@ function updateBody(existingBody: string, event?: Office.AddinCommands.Event): v
         name: LoggingLocalizedText.Errors.FailedToSetHTMLBody,
         message: setBodyAsyncResult.error.message
       });
-      completeEvent(setBodyAsyncResult.asyncContext, false);
+      complete(false);
     } else {
       processTrace(LoggingLocalizedText.Trace.SuccessToSetBody);
-      completeEvent(setBodyAsyncResult.asyncContext, true);
+      complete(true);
     }
   });
 }
 
 /**
- * Complete Event.
- * @param {Office.AddinCommands.Event | null} event
- * @param {boolean} [allowEvent=true]
+ * Complete.
+ * @param {boolean} [success=true]
  */
-function completeEvent(event?: Office.AddinCommands.Event, allowEvent: boolean = true) {
-  if (allowEvent) {
-    processTrace(LoggingLocalizedText.Trace.EventCompleted);
+function complete(success: boolean = true) {
+  if (success) {
+    processTrace(LoggingLocalizedText.Trace.Completed);
     showNotificationInformationalMessage(sprintf(UILocalizedText.Success));
   } else {
-    processTrace(LoggingLocalizedText.Trace.EventStopped);
+    processTrace(LoggingLocalizedText.Trace.Stopped);
   }
   loggerAI.flush();
-  if(event)
-    event.completed({ allowEvent: allowEvent });
+  if(completionCallback)
+    completionCallback(success);
 }

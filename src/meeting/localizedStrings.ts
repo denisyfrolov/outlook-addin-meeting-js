@@ -27,9 +27,9 @@ export var localizedStrings = (function() {
       ProcessApiRequestCompleted: "Api Request Completed",
       ProcessApiResponseStarted: "Processing Api Response Initiated",
       ProcessApiResponseCompleted: "Processing Api Response Completed",
-      EventStarted: "Event Processing STARTED",
-      EventCompleted: "Event Processing COMPLETED",
-      EventStopped: "Event Processing STOPPED"
+      Started: "Processing STARTED",
+      Completed: "Processing COMPLETED",
+      Stopped: "Processing STOPPED"
     }
   };
 
@@ -57,9 +57,9 @@ export var localizedStrings = (function() {
       ProcessApiRequestCompleted: "Запрос данных API выполнен",
       ProcessApiResponseStarted: "Обработка данных API инициирована",
       ProcessApiResponseCompleted: "Обработка данных API выполнена",
-      EventStarted: "Обработка события ЗАПУЩЕНА",
-      EventCompleted: "Обработка события ОКОНЧЕНА",
-      EventStopped: "Обработка события ОСТАНОВЛЕНА"
+      Started: "Обработка ЗАПУЩЕНА",
+      Completed: "Обработка ОКОНЧЕНА",
+      Stopped: "Обработка ОСТАНОВЛЕНА"
     }
   };
 

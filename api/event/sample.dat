@@ -1,4 +1,5 @@
 {
   "owner_email": "ivan@contoso.com",
-  "title": "Meeting subject"
+  "title": "Meeting subject",
+  "isguestsallowed": true
 }

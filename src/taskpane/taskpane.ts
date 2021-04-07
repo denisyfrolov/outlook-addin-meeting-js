@@ -9,7 +9,7 @@ Office.onReady((info) => {
     document.getElementById("create").onclick = function() { 
       var meetingname: string = (<HTMLTextAreaElement> document.getElementById("meetingname")).value;
       var isguestsallowed: boolean = (<HTMLInputElement> document.getElementById("isguestsallowed")).checked;
-      insertMeeting(null, meetingname, isguestsallowed); 
+      insertMeeting(meetingname, isguestsallowed, (): void => { Office.context.ui.closeContainer(); }); 
     };
     document.getElementById("cancel").onclick = function() { Office.context.ui.closeContainer(); };
   }

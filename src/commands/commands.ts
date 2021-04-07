@@ -5,7 +5,7 @@ import { insertMeeting } from "../meeting/meeting";
  * @param {Office.AddinCommands.Event} event
  */
 function commandsAction(event: Office.AddinCommands.Event): void {
-  insertMeeting(event);
+  insertMeeting(null, false, (allowEvent): void => { event.completed({ allowEvent: allowEvent }); });
 }
 
 function getGlobal() {
