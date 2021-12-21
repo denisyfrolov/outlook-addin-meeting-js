@@ -170,6 +170,14 @@ module.exports = async (env, options) => {
             from: "node_modules/bootstrap/dist/css/bootstrap.min.css.map"
           },
           {
+            to: "assets/office-js/",
+            from: "node_modules/@microsoft/office-js/dist"
+          },
+          {
+            to: "assets/MicrosoftAjax.js",
+            from: "assets/MicrosoftAjax.js"
+          },
+          {
             to: "[name]." + buildType + ".[ext]",
             from: "manifest*.xml",
             transform(content) {

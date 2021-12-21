@@ -72,6 +72,7 @@
     "prettier": "office-addin-prettier-config",
     "dependencies": {
         "@microsoft/applicationinsights-web": "^2.5.11",
+        "@microsoft/office-js": "^1.1.73",
         "bootstrap": "4.6.0",
         "core-js": "^3.9.1",
         "regenerator-runtime": "^0.13.7",
